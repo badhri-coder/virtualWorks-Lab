@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quick Note App</title>
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: #f4f6f8;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 600px;
+        padding: 40px 20px;
+    }
+
+    h1 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    p.subtitle {
+        text-align: center;
+        color: #7f8c8d;
+        margin-top: 0;
+        margin-bottom: 30px;
+        font-size: 14px;
+    }
+
+    .note-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+
+    textarea {
+        flex: 1;
+        resize: none;
+        height: 60px;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 15px;
+        font-family: inherit;
+    }
+
+    button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 0 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: background 0.2s;
+    }
+
+    button:hover {
+        background: #2980b9;
+    }
+
+    #status {
+        text-align: center;
+        min-height: 20px;
+        font-size: 13px;
+        color: #e74c3c;
+        margin-bottom: 15px;
+    }
+
+    .note-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px 18px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        position: relative;
+    }
+
+    .note-content {
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+
+    .note-meta {
+        font-size: 12px;
+        color: #95a5a6;
+    }
+
+    .delete-btn {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        background: none;
+        color: #bdc3c7;
+        font-size: 16px;
+        padding: 0;
+    }
+
+    .delete-btn:hover {
+        color: #e74c3c;
+        background: none;
+    }
+
+    #notes-list:empty::after {
+        content: "No notes yet. Write your first one above!";
+        display: block;
+        text-align: center;
+        color: #95a5a6;
+        padding: 20px;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>📝 Quick Note App</h1>
+    <p class="subtitle">Write a note below — it's saved to the database instantly.</p>
+
+    <div class="note-form">
+        <textarea id="note-input" placeholder="Type your note here..."></textarea>
+        <button id="save-btn" onclick="saveNote()">Save</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div id="notes-list"></div>
+</div>
+
+<script>
+    const API_URL = "/api/notes";
+
+    // Load all notes when the page opens
+    document.addEventListener("DOMContentLoaded", fetchNotes);
+
+    // Allow Ctrl+Enter to save
+    document.getElementById("note-input").addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            saveNote();
+        }
+    });
+
+    async function fetchNotes() {
+        try {
+            const response = await fetch(API_URL);
+            const notes = await response.json();
+            renderNotes(notes);
+        } catch (err) {
+            showStatus("Could not load notes. Is the backend running?");
+        }
+    }
+
+    async function saveNote() {
+        const input = document.getElementById("note-input");
+        const content = input.value.trim();
+
+        if (!content) {
+            showStatus("Note cannot be empty.");
+            return;
+        }
+
+        const saveBtn = document.getElementById("save-btn");
+        saveBtn.disabled = true;
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: content })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                showStatus(err.error || "Failed to save note.");
+                return;
+            }
+
+            input.value = "";
+            showStatus("");
+            fetchNotes(); // refresh list from the database
+        } catch (err) {
+            showStatus("Network error while saving note.");
+        } finally {
+            saveBtn.disabled = false;
+        }
+    }
+
+    async function deleteNote(id) {
+        try {
+            await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+            fetchNotes();
+        } catch (err) {
+            showStatus("Failed to delete note.");
+        }
+    }
+
+    function renderNotes(notes) {
+        const list = document.getElementById("notes-list");
+        list.innerHTML = "";
+
+        notes.forEach(note => {
+            const card = document.createElement("div");
+            card.className = "note-card";
+            card.innerHTML = `
+                <button class="delete-btn" onclick="deleteNote(${note.id})">✕</button>
+                <div class="note-content"></div>
+                <div class="note-meta">${note.created_at}</div>
+            `;
+            // set text content safely (avoids HTML injection)
+            card.querySelector(".note-content").textContent = note.content;
+            list.appendChild(card);
+        });
+    }
+
+    function showStatus(msg) {
+        document.getElementById("status").textContent = msg;
+    }
+</script>
+</body>
+</html>
