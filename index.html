@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Quick Note App</title>
+<title>User Profile Card Generator</title>
 <style>
     * { box-sizing: border-box; }
 
@@ -11,14 +11,13 @@
         font-family: 'Segoe UI', Arial, sans-serif;
         background: #f4f6f8;
         margin: 0;
-        padding: 0;
         display: flex;
         justify-content: center;
     }
 
     .container {
         width: 100%;
-        max-width: 600px;
+        max-width: 640px;
         padding: 40px 20px;
     }
 
@@ -36,193 +35,389 @@
         font-size: 14px;
     }
 
-    .note-form {
-        display: flex;
-        gap: 10px;
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
         margin-bottom: 30px;
     }
 
-    textarea {
-        flex: 1;
-        resize: none;
-        height: 60px;
-        padding: 12px;
+    label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #34495e;
+        margin-bottom: 6px;
+        margin-top: 14px;
+    }
+
+    label:first-child { margin-top: 0; }
+
+    input, textarea {
+        width: 100%;
+        padding: 10px 12px;
         border: 1px solid #ccc;
         border-radius: 8px;
-        font-size: 15px;
+        font-size: 14px;
         font-family: inherit;
     }
 
+    textarea { resize: vertical; min-height: 70px; }
+
+    .error-text {
+        color: #e74c3c;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
     button {
-        background: #3498db;
+        margin-top: 20px;
+        width: 100%;
+        background: #9b59b6;
         color: white;
         border: none;
-        padding: 0 20px;
+        padding: 12px;
         border-radius: 8px;
         cursor: pointer;
         font-size: 15px;
         transition: background 0.2s;
     }
 
-    button:hover {
-        background: #2980b9;
-    }
+    button:hover { background: #8e44ad; }
+    button:disabled { background: #bdc3c7; cursor: not-allowed; }
 
-    #status {
+    #global-status {
         text-align: center;
-        min-height: 20px;
+        min-height: 18px;
         font-size: 13px;
         color: #e74c3c;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
     }
 
-    .note-card {
+    /* ---- Profile card ---- */
+    .profile-card {
+        background: white;
+        border-radius: 14px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+        margin-bottom: 20px;
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin: 0 auto 14px;
+        display: block;
+        border: 3px solid #9b59b6;
+    }
+
+    .avatar-fallback {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        margin: 0 auto 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #9b59b6;
+        color: white;
+        font-size: 30px;
+        font-weight: 600;
+    }
+
+    .profile-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 6px;
+    }
+
+    .profile-bio {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 10px;
+        white-space: pre-wrap;
+    }
+
+    .profile-meta {
+        font-size: 11px;
+        color: #aaa;
+    }
+
+    .history-heading {
+        font-size: 14px;
+        color: #7f8c8d;
+        margin: 25px 0 10px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .history-card {
+        position: relative;
         background: white;
         border-radius: 10px;
-        padding: 15px 18px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        position: relative;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
 
-    .note-content {
-        white-space: pre-wrap;
-        word-break: break-word;
+    .history-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .history-avatar-fallback {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #9b59b6;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .history-info { flex: 1; min-width: 0; }
+
+    .history-name {
+        font-weight: 600;
         color: #2c3e50;
-        margin-bottom: 8px;
+        font-size: 14px;
     }
 
-    .note-meta {
+    .history-bio {
         font-size: 12px;
-        color: #95a5a6;
+        color: #888;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .delete-btn {
-        position: absolute;
-        top: 10px;
-        right: 12px;
         background: none;
         color: #bdc3c7;
         font-size: 16px;
-        padding: 0;
+        padding: 4px 8px;
+        width: auto;
+        margin: 0;
     }
 
-    .delete-btn:hover {
-        color: #e74c3c;
-        background: none;
-    }
-
-    #notes-list:empty::after {
-        content: "No notes yet. Write your first one above!";
-        display: block;
-        text-align: center;
-        color: #95a5a6;
-        padding: 20px;
-    }
+    .delete-btn:hover { color: #e74c3c; background: none; }
 </style>
 </head>
 <body>
 <div class="container">
-    <h1>📝 Quick Note App</h1>
-    <p class="subtitle">Write a note below — it's saved to the database instantly.</p>
+    <h1>👤 Profile Card Generator</h1>
+    <p class="subtitle">Fill in the details — the backend processes them and returns a ready-made card.</p>
 
-    <div class="note-form">
-        <textarea id="note-input" placeholder="Type your note here..."></textarea>
-        <button id="save-btn" onclick="saveNote()">Save</button>
+    <div class="form-card">
+        <label for="name">Name</label>
+        <input id="name" type="text" placeholder="e.g. Priya Sharma" />
+        <div class="error-text" id="name-error"></div>
+
+        <label for="bio">Bio</label>
+        <textarea id="bio" placeholder="A short line about yourself..."></textarea>
+        <div class="error-text" id="bio-error"></div>
+
+        <label for="image_url">Image URL (optional)</label>
+        <input id="image_url" type="text" placeholder="https://example.com/photo.jpg" />
+        <div class="error-text" id="image_url-error"></div>
+
+        <button id="generate-btn" onclick="generateProfile()">Generate Profile Card</button>
     </div>
 
-    <div id="status"></div>
+    <div id="global-status"></div>
 
-    <div id="notes-list"></div>
+    <div id="card-output"></div>
+
+    <div id="history-section" style="display:none;">
+        <div class="history-heading">Recently generated</div>
+        <div id="history-list"></div>
+    </div>
 </div>
 
 <script>
-    const API_URL = "/api/notes";
+    const PROFILE_URL = "/api/profile";
+    const HISTORY_URL = "/api/profiles";
 
-    // Load all notes when the page opens
-    document.addEventListener("DOMContentLoaded", fetchNotes);
+    document.addEventListener("DOMContentLoaded", loadHistory);
 
-    // Allow Ctrl+Enter to save
-    document.getElementById("note-input").addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-            saveNote();
-        }
-    });
+    async function generateProfile() {
+        clearErrors();
 
-    async function fetchNotes() {
-        try {
-            const response = await fetch(API_URL);
-            const notes = await response.json();
-            renderNotes(notes);
-        } catch (err) {
-            showStatus("Could not load notes. Is the backend running?");
-        }
-    }
+        const name = document.getElementById("name").value;
+        const bio = document.getElementById("bio").value;
+        const image_url = document.getElementById("image_url").value;
 
-    async function saveNote() {
-        const input = document.getElementById("note-input");
-        const content = input.value.trim();
-
-        if (!content) {
-            showStatus("Note cannot be empty.");
-            return;
-        }
-
-        const saveBtn = document.getElementById("save-btn");
-        saveBtn.disabled = true;
+        const btn = document.getElementById("generate-btn");
+        btn.disabled = true;
+        btn.textContent = "Generating...";
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch(PROFILE_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ content: content })
+                body: JSON.stringify({ name, bio, image_url })
             });
 
+            const result = await response.json();
+
             if (!response.ok) {
-                const err = await response.json();
-                showStatus(err.error || "Failed to save note.");
+                if (result.fields) {
+                    showFieldErrors(result.fields);
+                } else {
+                    showGlobalStatus(result.error || "Something went wrong.");
+                }
                 return;
             }
 
-            input.value = "";
-            showStatus("");
-            fetchNotes(); // refresh list from the database
+            renderCard(result);
+            loadHistory(); // refresh history from the database
         } catch (err) {
-            showStatus("Network error while saving note.");
+            showGlobalStatus("Network error. Is the backend running?");
         } finally {
-            saveBtn.disabled = false;
+            btn.disabled = false;
+            btn.textContent = "Generate Profile Card";
         }
     }
 
-    async function deleteNote(id) {
+    function renderCard(profile) {
+        const output = document.getElementById("card-output");
+        output.innerHTML = "";
+
+        const card = document.createElement("div");
+        card.className = "profile-card";
+
+        let avatarHtml;
+        if (profile.image_url) {
+            avatarHtml = `<img class="avatar" src="${escapeAttr(profile.image_url)}"
+                            onerror="this.replaceWith(makeFallback('${escapeAttr(profile.initials)}', 'avatar-fallback'))" />`;
+        } else {
+            avatarHtml = `<div class="avatar-fallback">${escapeHtml(profile.initials)}</div>`;
+        }
+
+        card.innerHTML = `
+            ${avatarHtml}
+            <div class="profile-name"></div>
+            <div class="profile-bio"></div>
+            <div class="profile-meta">Generated ${escapeHtml(profile.created_at)}</div>
+        `;
+        card.querySelector(".profile-name").textContent = profile.name;
+        card.querySelector(".profile-bio").textContent = profile.bio;
+
+        output.appendChild(card);
+    }
+
+    async function loadHistory() {
         try {
-            await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-            fetchNotes();
+            const response = await fetch(HISTORY_URL);
+            const profiles = await response.json();
+            renderHistory(profiles);
         } catch (err) {
-            showStatus("Failed to delete note.");
+            // silently ignore — history is a nice-to-have
         }
     }
 
-    function renderNotes(notes) {
-        const list = document.getElementById("notes-list");
+    function renderHistory(profiles) {
+        const section = document.getElementById("history-section");
+        const list = document.getElementById("history-list");
         list.innerHTML = "";
 
-        notes.forEach(note => {
-            const card = document.createElement("div");
-            card.className = "note-card";
-            card.innerHTML = `
-                <button class="delete-btn" onclick="deleteNote(${note.id})">✕</button>
-                <div class="note-content"></div>
-                <div class="note-meta">${note.created_at}</div>
+        if (!profiles.length) {
+            section.style.display = "none";
+            return;
+        }
+        section.style.display = "block";
+
+        profiles.forEach(p => {
+            const item = document.createElement("div");
+            item.className = "history-card";
+
+            let avatarHtml;
+            if (p.image_url) {
+                avatarHtml = `<img class="history-avatar" src="${escapeAttr(p.image_url)}"
+                                onerror="this.replaceWith(makeFallback('${escapeAttr(p.initials)}', 'history-avatar-fallback'))" />`;
+            } else {
+                avatarHtml = `<div class="history-avatar-fallback">${escapeHtml(p.initials)}</div>`;
+            }
+
+            item.innerHTML = `
+                ${avatarHtml}
+                <div class="history-info">
+                    <div class="history-name"></div>
+                    <div class="history-bio"></div>
+                </div>
+                <button class="delete-btn" onclick="deleteProfile(${p.id})">✕</button>
             `;
-            // set text content safely (avoids HTML injection)
-            card.querySelector(".note-content").textContent = note.content;
-            list.appendChild(card);
+            item.querySelector(".history-name").textContent = p.name;
+            item.querySelector(".history-bio").textContent = p.bio;
+            list.appendChild(item);
         });
     }
 
-    function showStatus(msg) {
-        document.getElementById("status").textContent = msg;
+    async function deleteProfile(id) {
+        try {
+            await fetch(`${HISTORY_URL}/${id}`, { method: "DELETE" });
+            loadHistory();
+        } catch (err) {
+            showGlobalStatus("Failed to delete profile.");
+        }
+    }
+
+    function makeFallback(initials, className) {
+        const div = document.createElement("div");
+        div.className = className;
+        div.textContent = initials;
+        return div;
+    }
+
+    function clearErrors() {
+        ["name", "bio", "image_url"].forEach(f => {
+            document.getElementById(`${f}-error`).textContent = "";
+        });
+        showGlobalStatus("");
+    }
+
+    function showFieldErrors(fields) {
+        Object.keys(fields).forEach(f => {
+            const el = document.getElementById(`${f}-error`);
+            if (el) el.textContent = fields[f];
+        });
+    }
+
+    function showGlobalStatus(msg) {
+        document.getElementById("global-status").textContent = msg;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function escapeAttr(str) {
+        return String(str).replace(/"/g, "&quot;");
     }
 </script>
 </body>
